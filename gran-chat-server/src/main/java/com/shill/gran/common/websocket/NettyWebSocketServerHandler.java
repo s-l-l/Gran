@@ -1,5 +1,6 @@
 package com.shill.gran.common.websocket;
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import cn.hutool.json.JSONUtil;
 import com.shill.gran.common.websocket.enums.WSReqTypeEnum;
@@ -19,17 +20,20 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
     //channel连接事件，连接了就生效了。保存用户信息和连接。
     WebSockService webSockService;
     @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        webSockService = SpringUtil.getBean(WebSockService.class);
-        webSockService.saveConnect(ctx.channel());
-
+    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+        this.webSockService = getService();
     }
 
+    private WebSockService getService() {
+        return SpringUtil.getBean(WebSockService.class);
+    }
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if(evt instanceof WebSocketServerProtocolHandler.HandshakeComplete){
             System.out.println("握手完成！");
-        }else if(evt instanceof IdleStateEvent){
+            this.webSockService.saveConnect(ctx.channel());
+        }
+        else if(evt instanceof IdleStateEvent){
             IdleStateEvent idleStateEvent = (IdleStateEvent) evt;
             if (idleStateEvent.state() == IdleState.READER_IDLE) {
                 System.out.println("读空闲");
@@ -43,7 +47,6 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         webSockService.userOffLine(ctx.channel());
-        ctx.channel().close();
     }
 
     /**
@@ -64,6 +67,7 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
                 webSockService.handleLoginReq(channelHandlerContext.channel());
                 break;
             case AUTHORIZE:
+
                 break;
             case HEARTBEAT:
                 break;

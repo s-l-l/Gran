@@ -2,6 +2,7 @@ package com.shill.gran.common.user.service;
 
 import com.shill.gran.common.user.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
+import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
 
 /**
 * @author Administrator
