@@ -81,7 +81,7 @@ public class WebSockServiceImpl implements WebSockService {
         //移除code
         WAIT_LOGIN_MAP.invalidate(loginCode);
         //调用登录获取token
-        String token = loginService.login(id);
+        String token = loginService.login(Long.valueOf(id));
         sendMsg(channel, (WSBaseResp<WSLoginUrl>) WebSockAdapter.buildResp(user, token));
     }
 
