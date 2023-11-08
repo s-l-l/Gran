@@ -7,7 +7,6 @@ import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -22,12 +21,11 @@ import java.util.Optional;
 @Slf4j
 @Component
 public class JwtUtils {
-
     /**
      * token秘钥，请勿泄露，请勿随便修改
      */
-    @Value("${mallchat.jwt.secret}")
-    private static String secret;
+    //@Value("${mallchat.jwt.secret}")
+    private static String secret = "shill";
 
     private static final String UID_CLAIM = "uid";
     private static final String CREATE_TIME = "createTime";

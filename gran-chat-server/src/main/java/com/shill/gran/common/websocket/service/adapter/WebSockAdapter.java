@@ -31,4 +31,10 @@ public class WebSockAdapter {
         baseResp.setType(WSRespTypeEnum.LOGIN_SCAN_SUCCESS.getType());
         return baseResp;
     }
+    //失效重新登录
+    public static WSBaseResp<?> buildInvalidTokenResp() {
+        WSBaseResp<WSLoginUrl> baseResp = new WSBaseResp<>();
+        baseResp.setType(WSRespTypeEnum.INVALIDATE_TOKEN.getType());
+        return baseResp;
+    }
 }

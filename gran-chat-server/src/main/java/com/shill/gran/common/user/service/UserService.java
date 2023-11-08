@@ -11,4 +11,6 @@ import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
 */
 public interface UserService extends IService<User> {
 
+    User getById(Long uid);
+
 }

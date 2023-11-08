@@ -68,7 +68,7 @@ public class NettyWebSocketServer {
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         ChannelPipeline pipeline = socketChannel.pipeline();
                         //30秒客户端没有向服务器发送心跳则关闭连接
-                        pipeline.addLast(new IdleStateHandler(30, 0, 0));
+                        pipeline.addLast(new IdleStateHandler(3600, 0, 0));
                         // 因为使用http协议，所以需要使用http的编码器，解码器
                         pipeline.addLast(new HttpServerCodec());
                         // 以块方式写，添加 chunkedWriter 处理器
@@ -90,12 +90,14 @@ public class NettyWebSocketServer {
                          *      是通过一个状态码 101 来切换的
                          */
                         pipeline.addLast(new WebSocketServerProtocolHandler("/"));
-                        // 自定义handler ，处理业务逻辑
                         pipeline.addLast(NETTY_WEB_SOCKET_SERVER_HANDLER);
+                        // 自定义handler ，处理业务逻辑
+                        pipeline.addLast(new HttpHeadersHandler());
                     }
                 });
         // 启动服务器，监听端口，阻塞直到启动成功
         serverBootstrap.bind(WEB_SOCKET_PORT).sync();
+        log.info("ws启动成功");
     }
 
 }

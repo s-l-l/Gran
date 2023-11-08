@@ -29,11 +29,17 @@ public interface WebSockService {
      * @param loginCode
      * @param id
      */
-    void scanLoginSuccess(Integer loginCode, String id);
+    void scanLoginSuccess(Integer loginCode, Long id);
 
     /**
      * 等待授权
      * @param loginCode
      */
     void waitAuthorize(Integer loginCode);
+
+    /**
+     * 校验用户
+     * @param
+     */
+    void authorize(Channel channel, String data);
 }

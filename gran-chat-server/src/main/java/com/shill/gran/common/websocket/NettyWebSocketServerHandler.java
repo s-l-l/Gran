@@ -1,6 +1,5 @@
 package com.shill.gran.common.websocket;
 
-import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import cn.hutool.json.JSONUtil;
 import com.shill.gran.common.websocket.enums.WSReqTypeEnum;
@@ -14,11 +13,13 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
+import jodd.util.StringUtil;
 
 @ChannelHandler.Sharable//多路复用一个处理器。
 public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
     //channel连接事件，连接了就生效了。保存用户信息和连接。
     WebSockService webSockService;
+
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         this.webSockService = getService();
@@ -27,13 +28,17 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
     private WebSockService getService() {
         return SpringUtil.getBean(WebSockService.class);
     }
+
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-        if(evt instanceof WebSocketServerProtocolHandler.HandshakeComplete){
+        if (evt instanceof WebSocketServerProtocolHandler.HandshakeComplete) {
             System.out.println("握手完成！");
+            String attr = NettyUtil.getAttr(ctx.channel(), NettyUtil.TOKEN);
+            if(StringUtil.isNotBlank(attr)){
+                webSockService.authorize(ctx.channel(),attr);
+            }
             this.webSockService.saveConnect(ctx.channel());
-        }
-        else if(evt instanceof IdleStateEvent){
+        } else if (evt instanceof IdleStateEvent) {
             IdleStateEvent idleStateEvent = (IdleStateEvent) evt;
             if (idleStateEvent.state() == IdleState.READER_IDLE) {
                 System.out.println("读空闲");
@@ -43,6 +48,7 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
             }
         }
     }
+
     //关闭浏览器-客户端主动下线。
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
@@ -51,6 +57,7 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
 
     /**
      * 用户下线
+     *
      * @param channel
      */
     private void userOffLine(Channel channel) {
@@ -62,12 +69,12 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, TextWebSocketFrame textWebSocketFrame) throws Exception {
         String text = textWebSocketFrame.text();
         WsBaseReqVo wsBaseReqVo = JSONUtil.toBean(text, WsBaseReqVo.class);
-        switch (WSReqTypeEnum.of(wsBaseReqVo.getType())){
+        switch (WSReqTypeEnum.of(wsBaseReqVo.getType())) {
             case LOGIN:
                 webSockService.handleLoginReq(channelHandlerContext.channel());
                 break;
             case AUTHORIZE:
-
+                webSockService.authorize(channelHandlerContext.channel(), wsBaseReqVo.getData());
                 break;
             case HEARTBEAT:
                 break;

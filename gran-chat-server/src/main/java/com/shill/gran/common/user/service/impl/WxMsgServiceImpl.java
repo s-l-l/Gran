@@ -53,7 +53,7 @@ public class WxMsgServiceImpl implements WxMsgService {
                 WAITE_AUTHORIZE_MAP.put(wxMsg.getOpenId(), loginCode);
             }
             //调用登录成功的逻辑
-            webSockService.scanLoginSuccess(loginCode,user1.getOpenId());
+            webSockService.scanLoginSuccess(loginCode,user1.getId());
             return null;
         }
         //告诉用户正在等待中。

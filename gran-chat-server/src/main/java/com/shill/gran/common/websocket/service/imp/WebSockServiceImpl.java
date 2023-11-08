@@ -9,6 +9,7 @@ import com.shill.gran.common.user.service.UserService;
 import com.shill.gran.common.websocket.domain.WSLoginUrl;
 import com.shill.gran.common.websocket.dto.WsChannelExtraDTO;
 import com.shill.gran.common.websocket.enums.WSBaseResp;
+import com.shill.gran.common.websocket.enums.WSRespTypeEnum;
 import com.shill.gran.common.websocket.service.LoginService;
 import com.shill.gran.common.websocket.service.WebSockService;
 import com.shill.gran.common.websocket.service.adapter.WebSockAdapter;
@@ -39,7 +40,7 @@ public class WebSockServiceImpl implements WebSockService {
 
     @Autowired
     private LoginService loginService;
-
+    //管理所有用户的连接
     private static final ConcurrentHashMap<Channel, WsChannelExtraDTO> ONLINE_WS_MAP = new ConcurrentHashMap<>();
 
     public static final int MAXIMUM_SIZE = 1000;
@@ -58,6 +59,26 @@ public class WebSockServiceImpl implements WebSockService {
     }
 
     @Override
+    public void authorize(Channel channel, String token) {
+        Long validUid = loginService.getValidUid(token);
+        if (Objects.nonNull(validUid)) {
+            User user = userService.getById(validUid);
+            loginSuccess(channel,user,token);
+            sendMsg(channel, (WSBaseResp<WSLoginUrl>) WebSockAdapter.buildResp(user,token));
+        }else {
+            sendMsg(channel, (WSBaseResp<WSLoginUrl>) WebSockAdapter.buildInvalidTokenResp());
+        }
+    }
+
+    private void loginSuccess(Channel channel, User user, String token) {
+        //推送成功消息
+        sendMsg(channel, (WSBaseResp<WSLoginUrl>) WebSockAdapter.buildResp(user, token));
+        WsChannelExtraDTO wsChannelExtraDTO = ONLINE_WS_MAP.get(channel);
+        wsChannelExtraDTO.setUid(user.getId());
+        //todo 用户上线成功的事件
+    }
+
+    @Override
     public void waitAuthorize(Integer loginCode) {
         Channel channel = WAIT_LOGIN_MAP.getIfPresent(loginCode);
         if (Objects.isNull(channel)) {
@@ -68,12 +89,12 @@ public class WebSockServiceImpl implements WebSockService {
 
 
     @Override
-    public void scanLoginSuccess(Integer loginCode, String id) {
+    public void scanLoginSuccess(Integer loginCode, Long id) {
         Channel channel = WAIT_LOGIN_MAP.getIfPresent(loginCode);
         if (Objects.isNull(channel)) {
             throw new RuntimeException("信道被迫断开连接！请重新扫码登录");
         }
-        List<User> userList = userService.lambdaQuery().eq(User::getOpenId, id).list();
+        List<User> userList = userService.lambdaQuery().eq(User::getId, id).list();
         User user = null;
         if (!userList.isEmpty()) {
             user = userList.get(0);
@@ -81,8 +102,8 @@ public class WebSockServiceImpl implements WebSockService {
         //移除code
         WAIT_LOGIN_MAP.invalidate(loginCode);
         //调用登录获取token
-        String token = loginService.login(Long.valueOf(id));
-        sendMsg(channel, (WSBaseResp<WSLoginUrl>) WebSockAdapter.buildResp(user, token));
+        String token = loginService.login(id);
+        loginSuccess(channel,user,token);
     }
 
     @Override
