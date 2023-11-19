@@ -7,10 +7,14 @@ import com.shill.gran.common.user.domain.vo.response.user.UserInfoResp;
 import com.shill.gran.common.user.service.UserService;
 import com.shill.gran.common.user.mapper.UserMapper;
 import com.shill.gran.common.user.service.adapter.UserAdapter;
+import com.shill.gran.common.utils.AssertUtil;
 import lombok.Builder;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.beans.Transient;
 
 /**
  * @author Administrator
@@ -38,12 +42,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     @Override
+    @Transactional
     public void modifyName(Long uid, String name) {
         //名字不能重复-查数据库看是否存在 -userDao
 
         //存在抛出异常-businessException
 
         //不存在修改
+        //获取第一张可以用的改名卡-如果没有改名卡了，抛出异常。
+
+        //使用改名卡
+
+        //修改用户名
+
     }
 }
 

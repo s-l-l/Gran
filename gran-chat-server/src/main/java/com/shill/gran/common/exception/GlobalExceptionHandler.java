@@ -87,7 +87,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(value = Throwable.class)
     public ApiResult throwable(Throwable throwable) {
-        log.error(throwable.getMessage());
+        log.error(throwable.getMessage(),throwable);
         return ApiResult.fail(CommonErrorEnum.SYSTEM_ERROR);
     }
 }
