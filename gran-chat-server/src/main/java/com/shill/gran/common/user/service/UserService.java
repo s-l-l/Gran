@@ -2,8 +2,11 @@ package com.shill.gran.common.user.service;
 
 import com.shill.gran.common.user.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.shill.gran.common.user.domain.vo.response.user.BadgeResp;
 import com.shill.gran.common.user.domain.vo.response.user.UserInfoResp;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
+
+import java.util.List;
 
 /**
 * @author Administrator
@@ -32,4 +35,11 @@ public interface UserService extends IService<User> {
      * @param name
      */
     void modifyName(Long uid, String name);
+
+    /**
+     * 可选徽章预览
+     * @param uid
+     * @return
+     */
+    List<BadgeResp> badges(Long uid);
 }
