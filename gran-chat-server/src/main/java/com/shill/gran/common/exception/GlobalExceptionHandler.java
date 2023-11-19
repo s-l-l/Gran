@@ -81,4 +81,13 @@ public class GlobalExceptionHandler {
         log.info("frequencyControl exception！The reason is：{}", e.getMessage(), e);
         return ApiResult.fail(e.getErrorCode(), e.getMessage());
     }
+
+    /**
+     * 顶级异常
+     */
+    @ExceptionHandler(value = Throwable.class)
+    public ApiResult throwable(Throwable throwable) {
+        log.error(throwable.getMessage());
+        return ApiResult.fail(CommonErrorEnum.SYSTEM_ERROR);
+    }
 }

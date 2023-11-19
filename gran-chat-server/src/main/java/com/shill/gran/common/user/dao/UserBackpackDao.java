@@ -1,5 +1,6 @@
 package com.shill.gran.common.user.dao;
 
+import com.shill.gran.common.framworkEntiry.enums.YesOrNoEnum;
 import com.shill.gran.common.user.domain.entity.UserBackpack;
 import com.shill.gran.common.user.mapper.UserBackpackMapper;
 import com.shill.gran.common.user.service.IUserBackpackService;
@@ -16,5 +17,9 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class UserBackpackDao extends ServiceImpl<UserBackpackMapper, UserBackpack> implements IUserBackpackService {
-
+    public Integer getCountByValidItemId(Long uid,Long itemId){
+        return lambdaQuery().eq(UserBackpack::getUid,uid)
+                .eq(UserBackpack::getItemId,itemId)
+                .eq(UserBackpack::getStatus, YesOrNoEnum.NO.getStatus()).count();
+    }
 }
