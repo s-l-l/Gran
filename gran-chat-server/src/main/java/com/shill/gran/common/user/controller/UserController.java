@@ -1,6 +1,7 @@
 package com.shill.gran.common.user.controller;
 
 import com.shill.gran.common.framworkEntiry.vo.response.ApiResult;
+import com.shill.gran.common.user.domain.vo.response.user.BadgeResp;
 import com.shill.gran.common.user.domain.vo.response.user.UserInfoResp;
 import com.shill.gran.common.user.service.UserService;
 import com.shill.gran.common.user.vo.ModifyNameReq;
@@ -11,6 +12,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 /**
  *
@@ -32,6 +35,12 @@ public class UserController {
     public ApiResult<Void> name(@RequestBody ModifyNameReq modifyNameReq){
         userService.modifyName(RequestHolder.get().getUid(),modifyNameReq.getName());
         return ApiResult.success();
+    }
+
+    @GetMapping("/badges")
+    @ApiOperation("可选徽章预览")
+    public ApiResult<List<BadgeResp>> badges() {
+        return ApiResult.success(userService.badges(RequestHolder.get().getUid()));
     }
 
 }

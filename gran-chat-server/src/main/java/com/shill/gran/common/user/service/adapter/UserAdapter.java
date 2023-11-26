@@ -1,11 +1,22 @@
 package com.shill.gran.common.user.service.adapter;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.RandomUtil;
+import com.shill.gran.common.framworkEntiry.enums.YesOrNoEnum;
 import com.shill.gran.common.user.domain.User;
+import com.shill.gran.common.user.domain.entity.ItemConfig;
+import com.shill.gran.common.user.domain.entity.UserBackpack;
+import com.shill.gran.common.user.domain.vo.response.user.BadgeResp;
 import com.shill.gran.common.user.domain.vo.response.user.UserInfoResp;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
+
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class UserAdapter {
@@ -14,6 +25,7 @@ public class UserAdapter {
         user.setOpenId(openId);
         return user;
     }
+
     public static User buildAuthorizeUser(Long id, WxOAuth2UserInfo userInfo) {
         User user = new User();
         user.setId(id);
@@ -27,10 +39,27 @@ public class UserAdapter {
         }
         return user;
     }
+
     public static UserInfoResp buildUserInfoResp(User userInfo, Integer countByValidItemId) {
         UserInfoResp userInfoResp = new UserInfoResp();
         BeanUtil.copyProperties(userInfo, userInfoResp);
         userInfoResp.setModifyNameChance(countByValidItemId);
         return userInfoResp;
+    }
+
+    public static List<BadgeResp> buildBadgeResp(List<ItemConfig> itemConfigs, List<UserBackpack> backpacks, User user) {
+        if (ObjectUtil.isNull(user)) {
+            // 这里 user 入参可能为空，防止 NPE 问题
+            return Collections.emptyList();
+        }
+        Set<Long> obtainItemSet = backpacks.stream().map(UserBackpack::getItemId).collect(Collectors.toSet());
+        return itemConfigs.stream().map(a -> {
+            BadgeResp resp = new BadgeResp();
+            BeanUtil.copyProperties(a, resp);
+            resp.setObtain(obtainItemSet.contains(a.getId()) ? YesOrNoEnum.YES.getStatus() : YesOrNoEnum.NO.getStatus());
+            resp.setWearing(ObjectUtil.equal(a.getId(), user.getItemId()) ? YesOrNoEnum.YES.getStatus() : YesOrNoEnum.NO.getStatus());
+            return resp;
+        }).sorted(Comparator.comparing(BadgeResp::getWearing, Comparator.reverseOrder()).thenComparing(BadgeResp::getObtain,
+                Comparator.reverseOrder())).collect(Collectors.toList());
     }
 }
