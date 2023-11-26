@@ -31,7 +31,7 @@ public class UserController {
     }
 
     @GetMapping("/name")
-    @ApiOperation("获取用户详情")
+    @ApiOperation("更新用户名")
     public ApiResult<Void> name(@RequestBody ModifyNameReq modifyNameReq){
         userService.modifyName(RequestHolder.get().getUid(),modifyNameReq.getName());
         return ApiResult.success();
