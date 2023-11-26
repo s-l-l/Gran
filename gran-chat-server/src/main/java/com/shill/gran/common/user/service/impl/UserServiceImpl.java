@@ -1,13 +1,22 @@
 package com.shill.gran.common.user.service.impl;
 
+import cn.hutool.core.lang.Console;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.shill.gran.common.exception.BusinessException;
+import com.shill.gran.common.exception.GlobalExceptionHandler;
+import com.shill.gran.common.user.dao.ItemConfigDao;
 import com.shill.gran.common.user.dao.UserBackpackDao;
 import com.shill.gran.common.user.domain.User;
+import com.shill.gran.common.user.domain.entity.ItemConfig;
+import com.shill.gran.common.user.domain.entity.UserBackpack;
 import com.shill.gran.common.user.domain.vo.response.user.UserInfoResp;
 import com.shill.gran.common.user.service.UserService;
 import com.shill.gran.common.user.mapper.UserMapper;
 import com.shill.gran.common.user.service.adapter.UserAdapter;
 import com.shill.gran.common.utils.AssertUtil;
+import jdk.nashorn.internal.objects.Global;
 import lombok.Builder;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.beans.Transient;
+import java.util.List;
 
 /**
  * @author Administrator
@@ -26,6 +36,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         implements UserService {
     @Autowired
     private UserBackpackDao userBackpackDao;
+    @Autowired
+    private ItemConfigDao itemConfigDao;
+
 
     @Override
     public User getById(Long uid) {
@@ -44,16 +57,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Override
     @Transactional
     public void modifyName(Long uid, String name) {
-        //名字不能重复-查数据库看是否存在 -userDao
-
-        //存在抛出异常-businessException
-
-        //不存在修改
-        //获取第一张可以用的改名卡-如果没有改名卡了，抛出异常。
-
-        //使用改名卡
-
-        //修改用户名
+        try {
+            //名字不能重复-查数据库看是否存在 -userDao
+            User user = this.getOne(new QueryWrapper<User>().eq("name", name));
+            if (user != null) {
+                //存在抛出异常-businessException
+                throw new BusinessException();
+            } else {
+                //不存在修改
+                ItemConfig itemConfigId = itemConfigDao.getOne(new QueryWrapper<ItemConfig>().eq("type", 1));
+                List<UserBackpack> byIds = userBackpackDao.list(new QueryWrapper<UserBackpack>().eq("uid", uid).eq("status", 0).eq("item_id", itemConfigId));
+                if (byIds == null) {
+                    //获取第一张可以用的改名卡-如果没有改名卡了，抛出异常。
+                    throw new BusinessException();
+                } else {
+                    //使用改名卡
+                    Long userBackpackId = byIds.get(0).getId();
+                    userBackpackDao.update().eq("id", userBackpackId).set("status", 1);
+                    //修改用户名
+                    this.update().eq("id", uid).set("name", name);
+                }
+            }
+        } catch (Exception e) {
+            Console.log(e);
+        }
 
     }
 }
