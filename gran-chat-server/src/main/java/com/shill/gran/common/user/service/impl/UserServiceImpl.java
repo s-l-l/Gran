@@ -3,6 +3,7 @@ package com.shill.gran.common.user.service.impl;
 import cn.hutool.core.lang.Console;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.shill.gran.common.event.UserEvent;
 import com.shill.gran.common.exception.BusinessException;
 import com.shill.gran.common.user.dao.ItemConfigDao;
 import com.shill.gran.common.user.dao.UserBackpackDao;
@@ -20,6 +21,7 @@ import com.shill.gran.common.utils.AssertUtil;
 import lombok.Builder;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,12 +45,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Autowired
     private ItemCache itemCache;
 
-
-
+    //注入事件
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
+    @Autowired
 
     @Override
     public User getById(Long uid) {
         User user = baseMapper.selectById(uid);
+        applicationEventPublisher.publishEvent(new UserEvent(this,user));
         return user;
     }
 
