@@ -20,6 +20,7 @@ import com.shill.gran.common.utils.AssertUtil;
 import lombok.Builder;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,12 +40,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     private UserBackpackDao userBackpackDao;
     @Autowired
     private ItemConfigDao itemConfigDao;
-
     @Autowired
     private ItemCache itemCache;
 
-    @Autowired
-    private UserService userDao;
 
 
 
@@ -73,11 +71,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
                 throw new BusinessException();
             } else {
                 //不存在修改
-                ItemConfig itemConfigId = itemConfigDao.getOne(new QueryWrapper<ItemConfig>().eq("type", 1));
-                List<UserBackpack> byIds = userBackpackDao.list(new QueryWrapper<UserBackpack>().eq("uid", uid).eq("status", 0).eq("item_id", itemConfigId));
-                if (byIds == null) {
+                QueryWrapper<ItemConfig> itemConfigQueryWrapper = new QueryWrapper<ItemConfig>().eq("type", 1);
+                ItemConfig itemConfigId = itemConfigDao.getOne(itemConfigQueryWrapper);
+                List<UserBackpack> byIds = userBackpackDao
+                        .list(new QueryWrapper<UserBackpack>()
+                                .eq("uid", uid)
+                                    .eq("status", 0)
+                                    .eq("item_id", itemConfigId));
+                if (byIds.isEmpty()) {
                     //获取第一张可以用的改名卡-如果没有改名卡了，抛出异常。
-                    throw new BusinessException();
+                    throw new BusinessException("亲，没有改名卡了呦！");
                 } else {
                     //使用改名卡
                     Long userBackpackId = byIds.get(0).getId();
@@ -99,7 +102,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         //查询用户拥有的徽章
         List<UserBackpack> backpacks = userBackpackDao.getByItemIds(uid, itemConfigs.stream().map(ItemConfig::getId).collect(Collectors.toList()));
         //查询用户当前佩戴的标签
-        User user = userDao.getById(uid);
+        User user = this.getById(uid);
         return UserAdapter.buildBadgeResp(itemConfigs, backpacks, user);
     }
 }

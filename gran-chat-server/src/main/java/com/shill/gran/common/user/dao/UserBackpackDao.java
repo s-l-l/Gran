@@ -29,8 +29,6 @@ import java.util.Objects;
 @Service
 public class UserBackpackDao extends ServiceImpl<UserBackpackMapper, UserBackpack> implements IUserBackpackService {
     @Autowired
-    private UserBackpackDao userBackpackDao;
-    @Autowired
     private ItemCache itemCache;
 
     @Autowired
@@ -76,7 +74,7 @@ public class UserBackpackDao extends ServiceImpl<UserBackpackMapper, UserBackpac
         RLock lock = redissonClient.getLock(idempotent);
         lock.tryLock();
         try {
-            UserBackpack userBackpack = userBackpackDao.getByIdp(idempotent);
+            UserBackpack userBackpack = this.getByIdp(idempotent);
             //幂等检查
             if (Objects.nonNull(userBackpack)) {
                 return;
@@ -84,7 +82,7 @@ public class UserBackpackDao extends ServiceImpl<UserBackpackMapper, UserBackpac
             //业务检查
             ItemConfig itemConfig = itemCache.getById(itemId);
             if (ItemTypeEnum.BADGE.getType().equals(itemConfig.getType())) {//徽章类型做唯一性检查
-                Integer countByValidItemId = userBackpackDao.getCountByValidItemId(uid, itemId);
+                Integer countByValidItemId = this.getCountByValidItemId(uid, itemId);
                 if (countByValidItemId > 0) {//已经有徽章了不发
                     return;
                 }
@@ -96,7 +94,7 @@ public class UserBackpackDao extends ServiceImpl<UserBackpackMapper, UserBackpac
                     .status(YesOrNoEnum.NO.getStatus())
                     .idempotent(idempotent)
                     .build();
-            userBackpackDao.save(insert);
+            this.save(insert);
         }catch (Exception e){
             lock.unlock();
         }
